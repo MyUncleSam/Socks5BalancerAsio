@@ -1,5 +1,5 @@
 # Build of the Socks5Balancer
-FROM alpine:3.18 AS build-proxy
+FROM alpine:3 AS build-proxy
 
 RUN apk update && apk upgrade && apk add boost-dev boost-static linux-headers cmake make openssl-dev gcc g++
 
@@ -13,7 +13,7 @@ RUN cmake .
 RUN make -j$(nproc)
 
 # Build of the Web interface for Socks5Balancer
-FROM node:18 AS build-webui
+FROM node:lts AS build-webui
 
 RUN apt update && apt install git
 
@@ -25,11 +25,14 @@ RUN git clone https://github.com/Socks5Balancer/html.git .
 # Was supposed to retrieve the submodule from the repository but doesn't work with github fork
 #COPY html /html
 
+# Fetch required yarn package manager version
+RUN corepack enable && corepack prepare yarn@3.4.1 --activate
+
 RUN yarn
 RUN yarn build
 
 # Runtime image
-FROM alpine:3.18 AS runtime
+FROM alpine:3 AS runtime
 
 RUN apk update && apk upgrade && apk add boost-dev boost-static
 
